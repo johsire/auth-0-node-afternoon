@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -86,6 +87,22 @@ app.get('/callback', (req, res) => {
         res.redirect('/');
       }
     },
+
+  app.put('/api/star', (req, res) => {
+    const { gitUser, gitRepo } = req.query;
+    axios.put(`https://api.github.com/user/starred/${gitUser}/${gitRepo}?access_token=${req.session.gitHubAccessToken}`)
+         .then(() => {
+           res.end();
+    }).catch(err => console.log('Error starring repo', err));
+  },
+
+  app.delete('/api/star', (req, res) => {
+    const { gitUser, gitRepo } = req.query;
+    axios.delete(`https://api.github.com/user/starred/${gitRepo}?access_token=${req.session.gitHubAccessToken}`)
+         .then(() => {
+           res.end()
+    }).catch(err => console.log('Error unstarring repo', err));
+  })));
 
   app.get('/api/user-data', (req, res) => {
     res.status(200).json(req.session.user)
