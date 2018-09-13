@@ -30,13 +30,13 @@ app.use(session({
 
 // endpoints:
 app.get('/callback', (req, res) => {
-  console.log(callback, 'The callback is getting hit!')
   exchangeCodeForAccessToken()
     .then(exchangeAccessTokenForUserInfo)
     .then(fetchAuth0AccessToken)
     .then(fetchGitHubAccessToken)
+    .then(setGitTokenToSession)
     .catch(error => {
-      console.log('Internal Server Error', error);
+      console.log('Server error', error);
       res.status(500).send('An error occurred on the server. Check the terminal.');
     });
 
@@ -68,8 +68,24 @@ app.get('/callback', (req, res) => {
       };
 
       return axios.post(`https://${REACT_APP_AUTH0_DOMAIN}/oauth/token`, payload);
-    }
-  },
+    };
+
+    function fetchGitHubAccessToken() {
+      const options = {
+        headers: {
+          authorization: `Bearer ${auth0AccessTokenResponse.data.access_token}`
+        }
+      };
+
+        return axios.get(`https://${REACT_APP_AUTH0_DOMAIN}/api/v2/users/${req.session.user.sub}`, options)
+      };
+
+      function setGitTokenToSession(gitHubAccessTokenResponse) {
+        const gitHubIdentity = gitHubAccessTokenResponse.data.identities[0];
+        req.session.gitHubAccessToken = gitHubIdentity.access_token;
+        res.redirect('/');
+      }
+    },
 
   app.get('/api/user-data', (req, res) => {
     res.status(200).json(req.session.user)
@@ -79,6 +95,8 @@ app.get('/callback', (req, res) => {
     req.session.destroy();
     res.send('logged out');
   }),
+
+
 
   // Server port listening:
   app.listen(SERVER_PORT, () => {
