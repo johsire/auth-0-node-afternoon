@@ -12,6 +12,8 @@ const app = express();
 
 // process.env destructures:
 let {
+  REACT_APP_CLIENT_ID,
+  CLIENT_SECRET,
   SERVER_PORT,
   SECRET
 } = process.env;
@@ -34,20 +36,22 @@ app.get('/callback', (req, res) => {
       .then(exchangeAccessTokenForUserInfo)
       .then(fetchAuth0AccessToken)
       .then(fetchGitHubAccessToken)
-      .then(setGitTokenToSession
+      // .then(setGitTokenToSession)
       .catch(error => {
           console.log(error, 'Server errror');
           res.status(500).send('An error occured on the server. Check the terminal');
-      }));
+      });
 
     function exchangeCodeForAccessToken() {
-        payload = {
-            client_id: 
-            client_secret: 
-            code: 
-            grant_type: 
-            redirect_uri: ('http//:localhost:3000')
-          }
+        const payload = {
+            client_id: REACT_APP_CLIENT_ID,
+            client_secret: CLIENT_SECRET,
+            code: req.query.code,
+            grant_type: 'authorization_code',
+            redirect_uri: `http://${req.headers.host}/auth/callback`
+          };
+
+          return axios.post(`https://${REACT_APP_AUTH0_DOMAIN}/oauth/`)
     }  
 },
 
